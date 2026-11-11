@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c4a28">
+  <meta name="description" content="16장을 외우고 포커 족보로 겨루는 1대1 기억력 게임. AI 또는 온라인 대전.">
+  <title>기억 포커</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-phase="setup">
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <p class="eyebrow">Memory Poker</p>
+        <h1>기억 포커</h1>
+      </div>
+      <div class="top-actions">
+        <p class="scoreboard" id="scoreboard" hidden>
+          <span>나 <strong id="score-player">0</strong>승</span>
+          <span>무 <strong id="score-draw">0</strong></span>
+          <span><span id="score-opponent-label">AI</span> <strong id="score-opponent">0</strong>승</span>
+          <span id="round-label"></span>
+          <span id="diff-label" class="pill"></span>
+          <span id="conn-status" class="pill" hidden>연결됨</span>
+        </p>
+        <button type="button" id="abandon" class="btn ghost" hidden>새 게임</button>
+      </div>
+    </header>
+
+    <section id="screen-menu" class="panel">
+      <p class="lead">16장을 외우고, 공유 카드와 맞춰 더 높은 족보를 만드세요.</p>
+      <h2>플레이 방법</h2>
+      <ol class="rules">
+        <li>16장을 30초 동안 외웁니다.</li>
+        <li>모두 뒷면으로 뒤집힌 뒤 공유 카드 3장이 공개됩니다.</li>
+        <li>뒷면 카드 중 2장을 고릅니다. 상대와 같은 카드를 골라도 됩니다.</li>
+        <li>고른 2장과 공유 3장으로 족보를 겨루고, 높은 쪽이 이깁니다.</li>
+      </ol>
+      <div class="menu-actions">
+        <button type="button" id="menu-ai" class="btn primary">AI 대전</button>
+        <button type="button" id="menu-online" class="btn primary">온라인 대전</button>
+      </div>
+      <p id="menu-notice" class="notice" hidden></p>
+      <p class="credit">넷플릭스 「데블스 플랜: 데드 어게인」의 기억 포커에서 영감을 받은 팬메이드 게임</p>
+    </section>
+
+    <section id="screen-setup" class="panel" hidden>
+      <h2>AI 대전</h2>
+      <p class="lead">난이도와 매치 길이를 고르세요.</p>
+      <form id="setup-form">
+        <fieldset>
+          <legend>난이도</legend>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="difficulty" value="easy">
+              <span>쉬움</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="difficulty" value="normal" checked>
+              <span>보통</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="difficulty" value="hard">
+              <span>어려움</span>
+            </label>
+          </div>
+          <p id="difficulty-hint" class="hint"></p>
+        </fieldset>
+        <fieldset>
+          <legend>매치</legend>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="wins" value="1">
+              <span>1판</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="wins" value="2" checked>
+              <span>3판 2선승</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="wins" value="3">
+              <span>5판 3선승</span>
+            </label>
+          </div>
+        </fieldset>
+        <button type="submit" class="btn primary">게임 시작</button>
+      </form>
+      <button type="button" id="setup-back" class="btn ghost back-btn">메뉴</button>
+    </section>
+
+    <section id="screen-online" class="panel" hidden>
+      <h2>온라인 대전</h2>
+      <p class="lead">각자 기기에서 같은 16장을 외웁니다. 3판 2선승이고, 방장이 카드를 섞습니다.</p>
+      <p id="net-status" class="status" aria-live="polite">코드를 만들거나 입력하세요.</p>
+      <div id="online-lobby">
+        <button type="button" id="create-room" class="btn primary">방 만들기</button>
+        <form id="join-form" class="join-form">
+          <label for="join-code">방 코드</label>
+          <input id="join-code" class="code-input" name="code" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" placeholder="ABCDE">
+          <button type="submit" class="btn primary">방 참가</button>
+        </form>
+        <p class="hint">코드를 입력하거나, 받은 링크를 열면 자동으로 참가합니다.</p>
+      </div>
+      <div id="room-waiting" hidden>
+        <p class="section-label">방 코드</p>
+        <p id="room-code" class="room-code"></p>
+        <div class="actions">
+          <button type="button" id="copy-code" class="btn ghost">코드 복사</button>
+        </div>
+        <p class="section-label">공유 링크</p>
+        <p id="share-url" class="share-url"></p>
+        <div class="actions">
+          <button type="button" id="copy-link" class="btn ghost">링크 복사</button>
+        </div>
+        <p class="hint">상대가 코드나 링크로 들어오면 시작합니다. 링크의 ?room=코드로 자동 참가합니다.</p>
+      </div>
+      <p id="copy-feedback" class="hint" aria-live="polite"></p>
+      <button type="button" id="online-back" class="btn ghost back-btn">메뉴</button>
+    </section>
+
+    <section id="screen-game" class="table" hidden>
+      <p id="status" class="status" aria-live="polite"></p>
+      <div id="timer" class="timer" hidden>
+        <p class="timer-caption">외우는 시간</p>
+        <p id="timer-num" class="timer-num" role="timer" aria-label="외우는 시간">30</p>
+        <div class="timer-track" aria-hidden="true"><span id="timer-fill"></span></div>
+      </div>
+      <div class="community-wrap">
+        <p class="section-label">공유 카드</p>
+        <p id="community-placeholder" class="placeholder">암기 후에 공개됩니다</p>
+        <div id="community" class="community"></div>
+      </div>
+      <div id="result" class="result" hidden></div>
+      <p id="grid-label" class="section-label">외울 카드</p>
+      <div id="grid" class="grid" role="group" aria-labelledby="grid-label"></div>
+      <div class="actions">
+        <button type="button" id="confirm" class="btn primary" hidden disabled>확정</button>
+        <button type="button" id="next" class="btn primary" hidden>다음 판</button>
+        <button type="button" id="rematch" class="btn primary" hidden>재대결</button>
+        <button type="button" id="restart" class="btn primary" hidden>새 게임</button>
+      </div>
+    </section>
+  </main>
+  <noscript>자바스크립트를 켜야 기억 포커를 플레이할 수 있습니다.</noscript>
+  <script src="https://unpkg.com/peerjs@1/dist/peerjs.min.js"></script>
+  <script src="js/cards.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
